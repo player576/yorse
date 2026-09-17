@@ -3,44 +3,208 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Yorse Catalog</title>
+  <title>Yorse Library</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; }
-    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-    input, button { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-    input { flex: 1; }
-    button { cursor: pointer; background: #000; color: #fff; border: none; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
-    .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #fafafa; }
-    .card h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
-    .card p { margin: 0 0 10px 0; color: #666; font-size: 0.9rem; }
-    .card .id-badge { background: #e0e0e0; font-family: monospace; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
-    .card a { display: inline-block; margin-top: 10px; color: #0066cc; text-decoration: none; }
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 { margin: 0; font-size: 1.8rem; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .btn {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); color: #fff; }
+
+    .search-box { display: flex; gap: 10px; margin-bottom: 25px; }
+    input {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      outline: none;
+      font-size: 1rem;
+    }
+    .search-input { flex: 1; }
+    input:focus { border-color: var(--accent); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+
+    .id-badge {
+      font-family: monospace;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .card h3 { margin: 5px 0; font-size: 1.2rem; }
+    .card p { margin: 0 0 15px 0; color: var(--muted); font-size: 0.95rem; }
+    
+    .download-btn {
+      text-decoration: none;
+      text-align: center;
+      background: var(--border);
+      color: var(--text);
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .download-btn:hover { background: var(--accent); color: #0f172a; }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 25px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h2 { margin: 0; font-size: 1.4rem; }
+    .close-btn { background: none; border: none; color: var(--muted); font-size: 1.5rem; cursor: pointer; }
+
+    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.9rem; color: var(--muted); }
+
+    .file-drop {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: border-color 0.2s;
+    }
+    .file-drop:hover { border-color: var(--accent); }
+    .file-drop input { display: none; }
+
+    .status-msg { margin-top: 10px; font-size: 0.9rem; text-align: center; }
   </style>
 </head>
 <body>
 
-  <h1>Yorse Library</h1>
+  <header>
+    <h1>Yorse Library</h1>
+    <button class="btn" onclick="openModal()">+ Загрузить книгу</button>
+  </header>
 
-  <!-- Поиск по названию или ID -->
   <div class="search-box">
-    <input type="text" id="searchInput" placeholder="Поиск по названию книги, автору или 6-значному ID..." />
-    <button onclick="handleSearch()">Найти</button>
+    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию, автору или 6-значному ID..." />
+    <button class="btn" onclick="handleSearch()">Искать</button>
   </div>
 
-  <h2>Каталог книг</h2>
-  <div id="booksGrid" class="grid">Загрузка книг...</div>
+  <div id="booksGrid" class="grid">Загрузка каталога...</div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Добавить книгу (.hpsep)</h2>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+
+      <form id="uploadForm">
+        <div class="form-group">
+          <label>Название книги</label>
+          <input type="text" id="bookTitle" required placeholder="Например: Война и мир" />
+        </div>
+
+        <div class="form-group">
+          <label>Автор</label>
+          <input type="text" id="bookAuthor" required placeholder="Например: Лев Толстой" />
+        </div>
+
+        <div class="form-group">
+          <label>Файл книги (.hpsep)</label>
+          <div class="file-drop" onclick="document.getElementById('fileInput').click()">
+            <span id="fileNameDisplay">Нажмите или перетащите файл .hpsep</span>
+            <input type="file" id="fileInput" accept=".hpsep" required onchange="updateFileName(this)" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; margin-top: 10px;" id="submitBtn">Загрузить</button>
+        <div class="status-msg" id="statusMsg"></div>
+      </form>
+    </div>
+  </div>
 
   <script>
-    // Загрузка книг при открытии страницы
     async function loadBooks(query = '') {
       const grid = document.getElementById('booksGrid');
-      grid.innerHTML = 'Загрузка...';
+      grid.innerHTML = '<p style="color: var(--muted);">Загрузка книг...</p>';
 
       let url = '/api';
       if (query) {
-        url += query.length === 6 && !query.includes(' ') 
-          ? `?id=${encodeURIComponent(query)}` 
+        url += query.length === 6 && !query.includes(' ')
+          ? `?id=${encodeURIComponent(query)}`
           : `?search=${encodeURIComponent(query)}`;
       }
 
@@ -53,21 +217,23 @@
         const books = Array.isArray(data) ? data : [data];
 
         if (books.length === 0) {
-          grid.innerHTML = '<p>Книги не найдены</p>';
+          grid.innerHTML = '<p style="color: var(--muted);">Ничего не найдено</p>';
           return;
         }
 
         grid.innerHTML = books.map(book => `
           <div class="card">
-            <span class="id-badge">ID: ${book.id}</span>
-            <h3>${escapeHtml(book.title)}</h3>
-            <p>Автор: ${escapeHtml(book.author)}</p>
-            <a href="${book.file_url}" target="_blank" download>Скачать .hpsep</a>
+            <div>
+              <span class="id-badge">ID: ${book.id}</span>
+              <h3>${escapeHtml(book.title)}</h3>
+              <p>${escapeHtml(book.author)}</p>
+            </div>
+            <a href="${book.file_url}" class="download-btn" target="_blank" download>Скачать .hpsep</a>
           </div>
         `).join('');
 
       } catch (err) {
-        grid.innerHTML = `<p style="color:red">${err.message}</p>`;
+        grid.innerHTML = `<p style="color: #ef4444;">${err.message}</p>`;
       }
     }
 
@@ -76,16 +242,93 @@
       loadBooks(q);
     }
 
-    // Поиск по нажатию Enter
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleSearch();
     });
+
+    // Modal controls
+    function openModal() { document.getElementById('modalOverlay').style.display = 'flex'; }
+    function closeModal() { 
+      document.getElementById('modalOverlay').style.display = 'none';
+      document.getElementById('uploadForm').reset();
+      document.getElementById('fileNameDisplay').textContent = 'Нажмите или перетащите файл .hpsep';
+      document.getElementById('statusMsg').textContent = '';
+    }
+
+    function updateFileName(input) {
+      if (input.files.length > 0) {
+        document.getElementById('fileNameDisplay').textContent = input.files[0].name;
+      }
+    }
+
+    // Form submit
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMsg = document.getElementById('statusMsg');
+      const fileInput = document.getElementById('fileInput');
+
+      if (!fileInput.files.length) return;
+
+      const file = fileInput.files[0];
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Загрузка...';
+      statusMsg.style.color = 'var(--muted)';
+      statusMsg.textContent = 'Кодирование файла...';
+
+      try {
+        const base64Data = await fileToBase64(file);
+        
+        statusMsg.textContent = 'Отправка на сервер...';
+        const res = await fetch('/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: document.getElementById('bookTitle').value,
+            author: document.getElementById('bookAuthor').value,
+            fileName: file.name,
+            fileData: base64Data
+          })
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Ошибка сохранения');
+
+        statusMsg.style.color = '#10b981';
+        statusMsg.textContent = `Успешно! Присвоен ID: ${result.id}`;
+
+        setTimeout(() => {
+          closeModal();
+          loadBooks();
+        }, 1500);
+
+      } catch (err) {
+        statusMsg.style.color = '#ef4444';
+        statusMsg.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Загрузить';
+      }
+    });
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          // Удаляем префикс "data:*/*;base64,"
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = error => reject(error);
+      });
+    }
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
     }
 
-    // Инициализация
     loadBooks();
   </script>
 </body>
