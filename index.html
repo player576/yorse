@@ -3,110 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HPSEP Library</title>
+  <title>Yorse Catalog</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; padding: 40px 20px; }
-    .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
-    h1, h2 { margin-bottom: 12px; color: #38bdf8; font-size: 20px; }
-    .input-group { display: flex; gap: 8px; }
-    input[type="text"], input[type="file"] {
-      width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155;
-      border-radius: 6px; color: #fff; font-size: 15px; margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 16px; background: #0284c7; color: white; border: none;
-      border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px;
-    }
-    button:hover { background: #0369a1; }
-    .result { margin-top: 12px; padding: 12px; background: #0f172a; border-radius: 6px; border-left: 3px solid #38bdf8; }
-    a.btn-dl { display: inline-block; margin-top: 8px; padding: 8px 12px; background: #22c55e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 20px auto; padding: 0 15px; }
+    .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+    input, button { padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+    input { flex: 1; }
+    button { cursor: pointer; background: #000; color: #fff; border: none; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
+    .card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #fafafa; }
+    .card h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+    .card p { margin: 0 0 10px 0; color: #666; font-size: 0.9rem; }
+    .card .id-badge { background: #e0e0e0; font-family: monospace; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+    .card a { display: inline-block; margin-top: 10px; color: #0066cc; text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Поиск -->
-    <div class="card">
-      <h1>Поиск книги по ID</h1>
-      <div class="input-group">
-        <input type="text" id="search-id" placeholder="6-значный ID (напр. A1B2C3)" maxlength="6" />
-        <button onclick="searchBook()">Найти</button>
-      </div>
-      <div id="search-res"></div>
-    </div>
 
-    <!-- Загрузка -->
-    <div class="card">
-      <h2>Загрузить .hpsep</h2>
-      <input type="text" id="up-title" placeholder="Название книги" />
-      <input type="text" id="up-author" placeholder="Автор" />
-      <input type="file" id="up-file" accept=".hpsep" />
-      <button onclick="uploadBook()" style="width: 100%;">Опубликовать</button>
-      <div id="up-status" style="margin-top: 10px;"></div>
-    </div>
+  <h1>Yorse Library</h1>
+
+  <!-- Поиск по названию или ID -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Поиск по названию книги, автору или 6-значному ID..." />
+    <button onclick="handleSearch()">Найти</button>
   </div>
 
+  <h2>Каталог книг</h2>
+  <div id="booksGrid" class="grid">Загрузка книг...</div>
+
   <script>
-    async function searchBook() {
-      const id = document.getElementById('search-id').value.trim();
-      const resDiv = document.getElementById('search-res');
-      if (id.length !== 6) return alert('ID должен быть из 6 символов!');
+    // Загрузка книг при открытии страницы
+    async function loadBooks(query = '') {
+      const grid = document.getElementById('booksGrid');
+      grid.innerHTML = 'Загрузка...';
 
-      resDiv.innerHTML = 'Поиск...';
-      const res = await fetch(`/api?id=${id}`);
-      const data = await res.json();
-
-      if (!res.ok) {
-        resDiv.innerHTML = `<p style="color:#f87171;">${data.error}</p>`;
-        return;
+      let url = '/api';
+      if (query) {
+        url += query.length === 6 && !query.includes(' ') 
+          ? `?id=${encodeURIComponent(query)}` 
+          : `?search=${encodeURIComponent(query)}`;
       }
 
-      resDiv.innerHTML = `
-        <div class="result">
-          <h3>${data.title}</h3>
-          <p>Автор: ${data.author}</p>
-          <p>ID: <b>${data.id}</b></p>
-          <a href="${data.file_url}" class="btn-dl" download>Скачать файл</a>
-        </div>
-      `;
-    }
-
-    async function uploadBook() {
-      const title = document.getElementById('up-title').value.trim();
-      const author = document.getElementById('up-author').value.trim();
-      const fileInput = document.getElementById('up-file');
-      const status = document.getElementById('up-status');
-
-      if (!title || !author || !fileInput.files[0]) return alert('Заполните все поля!');
-
-      const file = fileInput.files[0];
-      status.innerHTML = 'Чтение файла...';
-
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64Data = reader.result.split(',')[1];
-        status.innerHTML = 'Загрузка в БД и облако...';
-
-        const res = await fetch('/api', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title, author,
-            fileName: file.name,
-            fileData: base64Data
-          })
-        });
-
+      try {
+        const res = await fetch(url);
         const data = await res.json();
-        if (res.ok) {
-          status.innerHTML = `<p style="color:#4ade80;">Успешно! Уникальный ID: <b>${data.id}</b></p>`;
-        } else {
-          status.innerHTML = `<p style="color:#f87171;">Ошибка: ${data.error}</p>`;
+
+        if (!res.ok) throw new Error(data.error || 'Ошибка загрузки');
+
+        const books = Array.isArray(data) ? data : [data];
+
+        if (books.length === 0) {
+          grid.innerHTML = '<p>Книги не найдены</p>';
+          return;
         }
-      };
-      reader.readAsDataURL(file);
+
+        grid.innerHTML = books.map(book => `
+          <div class="card">
+            <span class="id-badge">ID: ${book.id}</span>
+            <h3>${escapeHtml(book.title)}</h3>
+            <p>Автор: ${escapeHtml(book.author)}</p>
+            <a href="${book.file_url}" target="_blank" download>Скачать .hpsep</a>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = `<p style="color:red">${err.message}</p>`;
+      }
     }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.trim();
+      loadBooks(q);
+    }
+
+    // Поиск по нажатию Enter
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSearch();
+    });
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    // Инициализация
+    loadBooks();
   </script>
 </body>
 </html>
