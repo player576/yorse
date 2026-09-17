@@ -4,7 +4,7 @@ import { put } from '@vercel/blob';
 export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL);
 
-  // 1. Поиск книги по 6-значному ID (GET /api?id=X7K9M2)
+  // 1. Поиск книги по 6-значному ID
   if (req.method === 'GET') {
     const { id } = req.query;
     if (!id || id.length !== 6) {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // 2. Загрузка книги и метаданных (POST /api)
+  // 2. Загрузка книги и метаданных
   if (req.method === 'POST') {
     try {
       const { title, author, fileName, fileData } = req.body;
@@ -31,9 +31,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Заполните все поля' });
       }
 
-      // Загружаем файл в Vercel Blob (private хранилище)
+      // Обязательно указываем access: 'public'
       const buffer = Buffer.from(fileData, 'base64');
-      const blob = await put(`books/${Date.now()}_${fileName}`, buffer, { access: 'private' });
+      const blob = await put(`books/${Date.now()}_${fileName}`, buffer, { access: 'public' });
 
       // Генерируем уникальный 6-значный ID
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
