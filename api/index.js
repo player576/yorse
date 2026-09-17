@@ -31,11 +31,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Заполните все поля' });
       }
 
-      // Загружаем файл в Vercel Blob
+      // Загружаем файл в Vercel Blob (private хранилище)
       const buffer = Buffer.from(fileData, 'base64');
-      const blob = await put(`books/${Date.now()}_${fileName}`, buffer, {
-        access: 'public',
-      });
+      const blob = await put(`books/${Date.now()}_${fileName}`, buffer, { access: 'private' });
 
       // Генерируем уникальный 6-значный ID
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
