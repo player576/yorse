@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HPSEP Library</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; padding: 40px 20px; }
+    .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
+    h1, h2 { margin-bottom: 16px; color: #38bdf8; }
+    .input-group { display: flex; gap: 10px; margin-bottom: 12px; }
+    input[type="text"], input[type="file"] {
+      flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155;
+      border-radius: 8px; color: #fff; font-size: 16px; outline: none;
+    }
+    input[type="text"]:focus { border-color: #38bdf8; }
+    button {
+      padding: 12px 20px; background: #0284c7; color: white; border: none;
+      border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { background: #0369a1; }
+    .book-result { margin-top: 16px; padding: 16px; background: #0f172a; border-radius: 8px; border-left: 4px solid #38bdf8; }
+    .download-btn { display: inline-block; margin-top: 12px; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Секция Поиска -->
+    <div class="card">
+      <h1>Поиск книги по ID</h1>
+      <div class="input-group">
+        <input type="text" id="search-id" placeholder="Введите 6-значный ID (напр. X7K9M2)" maxlength="6" />
+        <button id="btn-search">Найти</button>
+      </div>
+      <div id="search-result"></div>
+    </div>
+
+    <!-- Секция Загрузки -->
+    <div class="card">
+      <h2>Загрузить книгу (.hpsep)</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="text" id="upload-title" placeholder="Название книги" />
+        <input type="text" id="upload-author" placeholder="Автор" />
+        <input type="file" id="upload-file" accept=".hpsep" />
+        <button id="btn-upload">Опубликовать</button>
+      </div>
+      <div id="upload-status" style="margin-top: 12px;"></div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
