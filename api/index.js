@@ -32,8 +32,9 @@ export default async function handler(req, res) {
       }
 
       // Обязательно указываем access: 'public'
-      const buffer = Buffer.from(fileData, 'base64');
-      const blob = await put(`books/${Date.now()}_${fileName}`, buffer, { access: 'public' });
+     // Загружаем файл в Vercel Blob (соответствует настройкам приватного стора)
+const buffer = Buffer.from(fileData, 'base64');
+const blob = await put(`books/${Date.now()}_${fileName}`, buffer, { access: 'private' });
 
       // Генерируем уникальный 6-значный ID
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
