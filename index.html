@@ -5,51 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HPSEP Library</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; display: flex; justify-content: center; padding: 40px 20px; }
-    .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 24px; }
-    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; }
-    h1, h2 { margin-bottom: 16px; color: #38bdf8; }
-    .input-group { display: flex; gap: 10px; margin-bottom: 12px; }
+    .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+    h1, h2 { margin-bottom: 12px; color: #38bdf8; font-size: 20px; }
+    .input-group { display: flex; gap: 8px; }
     input[type="text"], input[type="file"] {
-      flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155;
-      border-radius: 8px; color: #fff; font-size: 16px; outline: none;
+      width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155;
+      border-radius: 6px; color: #fff; font-size: 15px; margin-bottom: 10px;
     }
-    input[type="text"]:focus { border-color: #38bdf8; }
     button {
-      padding: 12px 20px; background: #0284c7; color: white; border: none;
-      border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+      padding: 10px 16px; background: #0284c7; color: white; border: none;
+      border-radius: 6px; font-weight: bold; cursor: pointer; height: 42px;
     }
     button:hover { background: #0369a1; }
-    .book-result { margin-top: 16px; padding: 16px; background: #0f172a; border-radius: 8px; border-left: 4px solid #38bdf8; }
-    .download-btn { display: inline-block; margin-top: 12px; text-decoration: none; }
+    .result { margin-top: 12px; padding: 12px; background: #0f172a; border-radius: 6px; border-left: 3px solid #38bdf8; }
+    a.btn-dl { display: inline-block; margin-top: 8px; padding: 8px 12px; background: #22c55e; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Секция Поиска -->
+    <!-- Поиск -->
     <div class="card">
       <h1>Поиск книги по ID</h1>
       <div class="input-group">
-        <input type="text" id="search-id" placeholder="Введите 6-значный ID (напр. X7K9M2)" maxlength="6" />
-        <button id="btn-search">Найти</button>
+        <input type="text" id="search-id" placeholder="6-значный ID (напр. A1B2C3)" maxlength="6" />
+        <button onclick="searchBook()">Найти</button>
       </div>
-      <div id="search-result"></div>
+      <div id="search-res"></div>
     </div>
 
-    <!-- Секция Загрузки -->
+    <!-- Загрузка -->
     <div class="card">
-      <h2>Загрузить книгу (.hpsep)</h2>
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <input type="text" id="upload-title" placeholder="Название книги" />
-        <input type="text" id="upload-author" placeholder="Автор" />
-        <input type="file" id="upload-file" accept=".hpsep" />
-        <button id="btn-upload">Опубликовать</button>
-      </div>
-      <div id="upload-status" style="margin-top: 12px;"></div>
+      <h2>Загрузить .hpsep</h2>
+      <input type="text" id="up-title" placeholder="Название книги" />
+      <input type="text" id="up-author" placeholder="Автор" />
+      <input type="file" id="up-file" accept=".hpsep" />
+      <button onclick="uploadBook()" style="width: 100%;">Опубликовать</button>
+      <div id="up-status" style="margin-top: 10px;"></div>
     </div>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script>
+    async function searchBook() {
+      const id = document.getElementById('search-id').value.trim();
+      const resDiv = document.getElementById('search-res');
+      if (id.length !== 6) return alert('ID должен быть из 6 символов!');
+
+      resDiv.innerHTML = 'Поиск...';
+      const res = await fetch(`/api?id=${id}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        resDiv.innerHTML = `<p style="color:#f87171;">${data.error}</p>`;
+        return;
+      }
+
+      resDiv.innerHTML = `
+        <div class="result">
+          <h3>${data.title}</h3>
+          <p>Автор: ${data.author}</p>
+          <p>ID: <b>${data.id}</b></p>
+          <a href="${data.file_url}" class="btn-dl" download>Скачать файл</a>
+        </div>
+      `;
+    }
+
+    async function uploadBook() {
+      const title = document.getElementById('up-title').value.trim();
+      const author = document.getElementById('up-author').value.trim();
+      const fileInput = document.getElementById('up-file');
+      const status = document.getElementById('up-status');
+
+      if (!title || !author || !fileInput.files[0]) return alert('Заполните все поля!');
+
+      const file = fileInput.files[0];
+      status.innerHTML = 'Чтение файла...';
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result.split(',')[1];
+        status.innerHTML = 'Загрузка в БД и облако...';
+
+        const res = await fetch('/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title, author,
+            fileName: file.name,
+            fileData: base64Data
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          status.innerHTML = `<p style="color:#4ade80;">Успешно! Уникальный ID: <b>${data.id}</b></p>`;
+        } else {
+          status.innerHTML = `<p style="color:#f87171;">Ошибка: ${data.error}</p>`;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
 </body>
 </html>
